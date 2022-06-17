@@ -9,7 +9,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class OGSetSpawn implements CommandExecutor {
-
+    /**
+     * This function handles the /ogsetspawn command
+     *
+     * @param commandSender Represents the player or console sending the command
+     * @param command Represents the command object that is created when the command is sent
+     * @param s
+     * @param strings String array that contains all parameters that are entered
+     * @return Returns, if the execution was successful
+     */
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
         if(commandSender instanceof Player){

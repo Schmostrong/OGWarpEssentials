@@ -15,6 +15,15 @@ import java.util.Locale;
 import java.util.Map;
 
 public class OGSpawnPrivate implements CommandExecutor {
+    /**
+     * This function handles the /ogspawn (<Spawn>) command
+     *
+     * @param commandSender Represents the player or console sending the command
+     * @param command Represents the command object that is created when the command is sent
+     * @param s
+     * @param strings String array that contains all parameters that are entered
+     * @return Returns, if the execution was successful
+     */
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
         if(commandSender instanceof Player){
@@ -44,9 +53,16 @@ public class OGSpawnPrivate implements CommandExecutor {
         return false;
     }
 
+    /**
+     * This function is used to build and open the inventory to the player containing all its private spawns
+     *
+     * @author Schmostrong
+     * @param player Represents the player, who receives the inventory
+     */
     public void inventoryBuilder(Player player){
         Inventory inv = Bukkit.createInventory(player, 24, "Private Warps");
         inv.setItem(4, new ItemStack(Material.ENDER_PEARL));
+        inv.getItem(4).getItemMeta().setDisplayName("Public Spawn");
 
         int index = 10;
         for(Map.Entry<String, Location> playerSpawns : OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(player).entrySet()){
