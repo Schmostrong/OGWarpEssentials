@@ -3,6 +3,7 @@ package og.spigot.survival.spawnplugin.main;
 import og.spigot.survival.spawnplugin.commands.OGSetSpawn;
 import og.spigot.survival.spawnplugin.commands.OGSpawnPrivate;
 import og.spigot.survival.spawnplugin.commands.Spawn;
+import og.spigot.survival.spawnplugin.database.DAO;
 import og.spigot.survival.spawnplugin.listener.OGSpawnPluginListener;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,13 +27,19 @@ public class OGSpawnPluginMain extends JavaPlugin {
             this.getDataFolder().mkdirs();
         }
 
+        DAO.getDataAccessObject().createDAOConnection(this.getConfig().getString("mysql_host"),
+                                                        this.getConfig().getString("database"),
+                                                        this.getConfig().getString("username"),
+                                                        this.getConfig().getString("password"),
+                                                        this.getConfig().getInt("mysql_port"));
+        DAO.getDataAccessObject().prepareTables();
         super.onEnable();
     }
 
     @Override
     public void onDisable() {
-        this.saveDefaultConfig();
-        this.saveConfig();
+        DAO.getDataAccessObject().saveAllPrivateSpawns();
+        DAO.getDataAccessObject().saveGlobalSpawn();
     }
 
     public static FileConfiguration getMainConfig(){

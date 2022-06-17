@@ -55,4 +55,8 @@ public class OGSpawnUtils {
             return emptyLocations;
         }
     }
+
+    public Map<Player, Map<String, Location>> getAllPlayerSpawns(){
+        return playerSpawns;
+    }
 }
