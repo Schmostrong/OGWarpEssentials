@@ -1,0 +1,14 @@
+name: OGWarpEssentials
+author: Schmostrong
+version: 1.1
+main: og.spigot.survival.spawnplugin.main.OGSpawnPluginMain
+commands:
+  ogsetspawn:
+    usage: /ogsetspawn
+    description: Command is used to set the global spawn point
+  spawn:
+    usage: /spawn
+    description: Command is used to teleport to the global spawn
+  ogspawn:
+    usage: /ogspawn <Name>
+    description: Used to teleport to a designated spawn position
