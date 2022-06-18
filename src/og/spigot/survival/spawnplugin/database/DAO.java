@@ -43,9 +43,9 @@ public class DAO {
             ps.setInt(7, OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn().getBlockZ());
             ps.setTimestamp(8, new java.sql.Timestamp (System.currentTimeMillis ()));
 
-            ps.execute();
+            ps.executeUpdate();
         }catch (Exception ex){
-            ex.getLocalizedMessage();
+            System.out.println(ex.getLocalizedMessage());
         }finally {
             if(connection.getConnection() != null){
                 connection.closeConnection();
@@ -68,10 +68,10 @@ public class DAO {
                 ps.setInt(7, playerSpawns.getValue().getBlockZ());
                 ps.setTimestamp(8, new java.sql.Timestamp (System.currentTimeMillis ()));
 
-                ps.execute();
+                ps.executeUpdate();
             }
         }catch (Exception ex){
-            ex.getLocalizedMessage();
+            System.out.println(ex.getLocalizedMessage());
         }finally {
             if(connection.getConnection() != null){
                 connection.closeConnection();
@@ -96,11 +96,11 @@ public class DAO {
                     ps.setInt(7, specificPlayerSpawns.getValue().getBlockZ());
                     ps.setTimestamp(8, new java.sql.Timestamp (System.currentTimeMillis ()));
 
-                    ps.execute();
+                    ps.executeUpdate();
                 }
             }
         }catch (Exception ex){
-            ex.getLocalizedMessage();
+            System.out.println(ex.getLocalizedMessage());
         }finally {
             if(connection.getConnection() != null){
                 connection.closeConnection();
@@ -111,16 +111,16 @@ public class DAO {
     public void retrieveGlobalSpawn(World world){
         try{
             connection.openConnection();
-            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT BlockX, BlockY, BlockZ" +
-                                                                                    "FROM OGWarpEssentials" +
-                                                                                    "WHERE scope = global");
+            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT BlockX, BlockY, BlockZ " +
+                                                                                    "FROM OGSpawnPoints " +
+                                                                                    "WHERE scope = 'global'");
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
                 Location loc = new Location(world, rs.getInt("BlockX"), rs.getInt("BlockY"), rs.getInt("BlockZ"));
                 OGSpawnUtils.getOGSpawnUtils().setGlobalSpawn(loc);
             }
         }catch (Exception ex){
-            ex.getLocalizedMessage();
+            System.out.println(ex.getLocalizedMessage());
         }finally {
             if(connection.getConnection() != null){
                 connection.closeConnection();
@@ -131,8 +131,8 @@ public class DAO {
     public void retrievePlayerSpawns(Player p, World world){
         try{
             connection.openConnection();
-            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT Spawnname, BlockX, BlockY, BlockZ" +
-                                                            "FROM OGWarpEssentials" +
+            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT Spawnname, BlockX, BlockY, BlockZ " +
+                                                            "FROM OGSpawnPoints " +
                                                             "WHERE OwnerName = ?");
             ps.setString(1, p.getDisplayName());
             ResultSet rs = ps.executeQuery();
@@ -141,7 +141,7 @@ public class DAO {
                 OGSpawnUtils.getOGSpawnUtils().addPlayerSpawn(p, rs.getString(1), loc);
             }
         }catch (Exception ex){
-            ex.getLocalizedMessage();
+            System.out.println(ex.getLocalizedMessage());
         }finally {
             if(connection.getConnection() != null){
                 connection.closeConnection();
@@ -153,20 +153,19 @@ public class DAO {
     public void prepareTables(){
         try{
             this.connection.openConnection();
-            PreparedStatement ps = this.connection.getConnection().prepareStatement("CREATE TABLE OGSpawnPoint(" +
-                                                                                        "SpawnPointId INT AUTO_INCREMENT PRIMARY KEY," +
-                                                                                        "Scope varchar(10)," +
+            PreparedStatement ps = this.connection.getConnection().prepareStatement("CREATE TABLE OGSpawnPoints" +
+                                                                                        "(scope varchar(10)," +
                                                                                         "OwnerName varchar(30)," +
                                                                                         "SpawnName varchar(50)," +
                                                                                         "World varchar(50)," +
                                                                                         "BlockX int," +
                                                                                         "BlockY int," +
                                                                                         "BlockZ int," +
-                                                                                        "TS_modified timestamp" +
-                                                                                        "                         )");
-            ps.execute();
+                                                                                        "TS_modified timestamp, " +
+                                                                                        "PRIMARY KEY(OwnerName, SpawnName))");
+            ps.executeUpdate();
         }catch (Exception ex){
-            ex.getLocalizedMessage();
+            System.out.println(ex.getLocalizedMessage());
         }finally {
             if(connection.getConnection() != null){
                 connection.closeConnection();

@@ -28,12 +28,6 @@ public class OGSpawnPluginListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent playerJoinEvent){
         World w = playerJoinEvent.getPlayer().getWorld();
 
-        int x = (int)OGSpawnPluginMain.getMainConfig().get("X");
-        int y = (int)OGSpawnPluginMain.getMainConfig().get("Y");
-        int z = (int)OGSpawnPluginMain.getMainConfig().get("Z");
-
-        Location globalSpawn = new Location(w, x, y, z);
-        OGSpawnUtils.getOGSpawnUtils().setGlobalSpawn(globalSpawn);
         DAO.getDataAccessObject().retrieveGlobalSpawn(w);
         DAO.getDataAccessObject().retrievePlayerSpawns(playerJoinEvent.getPlayer(), w);
     }
@@ -64,10 +58,20 @@ public class OGSpawnPluginListener implements Listener {
     @EventHandler
     public void onWarpInventoryClick(InventoryClickEvent inventoryClickEvent){
         Player p =  (Player)inventoryClickEvent.getWhoClicked();
-        if(OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p).containsKey(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName())){
-            p.teleport(OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p).get(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName()));
-        }else if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Public Spawn")){
-            p.teleport(OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn());
+
+        try{
+            if(inventoryClickEvent.getCurrentItem().getItemMeta() != null){
+                if(OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p).containsKey(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName())){
+                    inventoryClickEvent.setCancelled(true);
+                    p.teleport(OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p).get(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName()));
+                }else if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Public Spawn")){
+                    inventoryClickEvent.setCancelled(true);
+                    p.teleport(OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn());
+                }
+            }
+        }catch (Exception ex){
+            ex.getLocalizedMessage();
         }
+
     }
 }

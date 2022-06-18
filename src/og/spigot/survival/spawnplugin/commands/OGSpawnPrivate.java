@@ -1,5 +1,6 @@
 package og.spigot.survival.spawnplugin.commands;
 
+import og.spigot.survival.spawnplugin.main.OGSpawnPluginMain;
 import og.spigot.survival.spawnplugin.utils.OGSpawnUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -10,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Locale;
 import java.util.Map;
@@ -31,13 +33,13 @@ public class OGSpawnPrivate implements CommandExecutor {
                 Player p = (Player) commandSender;
                 Map<String, Location> playerSpawn = OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p);
 
-                if(!playerSpawn.isEmpty()){
+                if(!playerSpawn.isEmpty() || OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn() != null){
                     if (strings.length > 0){
                         if(playerSpawn.containsKey(strings[0])){
                             commandSender.sendMessage("§7[§3OGWarpEssentials§7] >> §2Teleportiere...");
                             p.teleport(playerSpawn.get(strings[0]));
                         }else{
-                            commandSender.sendMessage("§7[§3OGWarpEssentials§7] >> Es konnte kein Spawn mit dem Namen §c" + strings[0] + "§7gefunden werden");
+                            commandSender.sendMessage("§7[§3OGWarpEssentials§7] >> Es konnte kein Spawn mit dem Namen §c" + strings[0] + " §7gefunden werden");
                         }
                     }else{
                         inventoryBuilder(p);
@@ -60,14 +62,23 @@ public class OGSpawnPrivate implements CommandExecutor {
      * @param player Represents the player, who receives the inventory
      */
     public void inventoryBuilder(Player player){
-        Inventory inv = Bukkit.createInventory(player, 24, "Private Warps");
-        inv.setItem(4, new ItemStack(Material.ENDER_PEARL));
-        inv.getItem(4).getItemMeta().setDisplayName("Public Spawn");
+        Inventory inv = Bukkit.createInventory(player, 27, "Private Warps");
+
+        if(OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn() != null){
+            inv.setItem(4, new ItemStack(Material.BEACON));
+            ItemMeta publicSpawnMeta = inv.getItem(4).getItemMeta();
+            publicSpawnMeta.setDisplayName("Public Spawn");
+            inv.getItem(4).setItemMeta(publicSpawnMeta);
+        }
 
         int index = 10;
+        ItemMeta privateSpawnMeta;
+
         for(Map.Entry<String, Location> playerSpawns : OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(player).entrySet()){
             inv.setItem(index, new ItemStack(Material.ENDER_PEARL));
-            inv.getItem(index).getItemMeta().setDisplayName(playerSpawns.getKey());
+            privateSpawnMeta = inv.getItem(index).getItemMeta();
+            privateSpawnMeta.setDisplayName(playerSpawns.getKey());
+            inv.getItem(index).setItemMeta(privateSpawnMeta);
             index++;
 
             if(index % 8 == 0){
@@ -75,6 +86,8 @@ public class OGSpawnPrivate implements CommandExecutor {
             }
         }
 
-        player.openInventory(inv);
+        if(!inv.isEmpty()){
+            player.openInventory(inv);
+        }
     }
 }
