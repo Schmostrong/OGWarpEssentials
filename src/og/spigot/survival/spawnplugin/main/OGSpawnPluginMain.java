@@ -1,9 +1,6 @@
 package og.spigot.survival.spawnplugin.main;
 
-import og.spigot.survival.spawnplugin.commands.OGRemoveSpawn;
-import og.spigot.survival.spawnplugin.commands.OGSetSpawn;
-import og.spigot.survival.spawnplugin.commands.OGSpawnPrivate;
-import og.spigot.survival.spawnplugin.commands.Spawn;
+import og.spigot.survival.spawnplugin.commands.*;
 import og.spigot.survival.spawnplugin.database.DAO;
 import og.spigot.survival.spawnplugin.listener.OGSpawnPluginListener;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -31,6 +28,7 @@ public class OGSpawnPluginMain extends JavaPlugin {
         getCommand("ogsetspawn").setExecutor(new OGSetSpawn());
         getCommand("ogremovespawn").setExecutor(new OGRemoveSpawn());
         getCommand("ogspawn").setExecutor(new OGSpawnPrivate());
+        getCommand("ogconfigurespawn").setExecutor(new OGConfigureSpawn());
         getCommand("spawn").setExecutor(new Spawn());
         getServer().getPluginManager().registerEvents(new OGSpawnPluginListener(), this);
         super.onEnable();

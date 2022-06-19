@@ -5,12 +5,15 @@ import og.spigot.survival.spawnplugin.main.OGSpawnPluginMain;
 import og.spigot.survival.spawnplugin.utils.OGSpawn;
 import og.spigot.survival.spawnplugin.utils.OGSpawnUtils;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -60,19 +63,45 @@ public class OGSpawnPluginListener implements Listener {
 
         try{
             if(inventoryClickEvent.getCurrentItem().getItemMeta() != null){
-                for(OGSpawn spawn : OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(p)){
-                    if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals(spawn.getSpawnName())){
-                        inventoryClickEvent.setCancelled(true);
-                        p.teleport(spawn.getSpawnLocation());
+                if(inventoryClickEvent.getView().getTitle().equals("Private Spawns")){
+                    for(OGSpawn spawn : OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(p)){
+                        if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals(spawn.getSpawnName())){
+                            inventoryClickEvent.setCancelled(true);
+                            p.teleport(spawn.getSpawnLocation());
+                        }
                     }
-                }
-                if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Public Spawn")){
+                    if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Public Spawn")){
+                        inventoryClickEvent.setCancelled(true);
+                        p.teleport(OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn());
+                    }
+                }else if(inventoryClickEvent.getView().getTitle().equals("Private Spawns Configuration")){
                     inventoryClickEvent.setCancelled(true);
-                    p.teleport(OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn());
+                    if(inventoryClickEvent.getCurrentItem().getType() == Material.RED_STAINED_GLASS_PANE){
+                        p.closeInventory();
+                        OGSpawn deleted = OGSpawnUtils.getOGSpawnUtils().removePrivateSpawnBySpawnName(p, inventoryClickEvent.getInventory().getItem(13).getItemMeta().getDisplayName());
+                        DAO.getDataAccessObject().removePrivateSpawn(deleted);
+                        p.sendMessage("§7[§3OGWarpEssentials§7] >> Der Spawnpunkt mit dem Namen §e" + inventoryClickEvent.getInventory().getItem(13).getItemMeta().getDisplayName() + " §7wurde erfolgreich entfernt");
+                        OGSpawnUtils.getOGSpawnUtils().removePlayerFromConfigProcess(p);
+                    }else if(inventoryClickEvent.getCurrentItem().getType() == Material.OAK_SIGN){
+                        p.closeInventory();
+                        p.sendMessage("§7[§3OGWarpEssentials§7] >> Bitte gib den neuen Namen für deinen Spawnpunkt ein");
+                    }
                 }
             }
         }catch (Exception ex){
             ex.getLocalizedMessage();
+        }
+    }
+
+    @EventHandler
+    public void onPlayerSpawnRenameProcess(AsyncPlayerChatEvent asyncPlayerChatEvent){
+        if(OGSpawnUtils.getOGSpawnUtils().isPlayerInConfigMode(asyncPlayerChatEvent.getPlayer())){
+            asyncPlayerChatEvent.setCancelled(true);
+
+            OGSpawn spawn =OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(asyncPlayerChatEvent.getPlayer()).get(OGSpawnUtils.getOGSpawnUtils().getCurrentConfigPage(asyncPlayerChatEvent.getPlayer()));
+            asyncPlayerChatEvent.getPlayer().sendMessage("§7[§3OGWarpEssentials§7] >> Der Name des Spawnpunktes §e" + spawn.getSpawnName() + " §7wurde erfolgreich auf §e" + asyncPlayerChatEvent.getMessage() + " §7geändert");
+            spawn.setSpawnName(asyncPlayerChatEvent.getMessage());
+            OGSpawnUtils.getOGSpawnUtils().removePlayerFromConfigProcess(asyncPlayerChatEvent.getPlayer());
         }
     }
 }

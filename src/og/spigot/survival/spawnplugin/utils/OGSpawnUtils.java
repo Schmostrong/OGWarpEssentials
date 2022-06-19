@@ -27,6 +27,8 @@ public class OGSpawnUtils {
      */
     private static OGSpawnUtils spawnUtils;
 
+    private Map<Player, Integer> currentConfigPage;
+
     /**
      *
      * Private constructor, so that the singleton design pattern is complete
@@ -34,6 +36,7 @@ public class OGSpawnUtils {
     private OGSpawnUtils(){
         globalSpawn = null;
         privateSpawns = new LinkedList<>();
+        currentConfigPage = new HashMap<>();
     }
 
     /**
@@ -94,6 +97,16 @@ public class OGSpawnUtils {
         this.privateSpawns.remove(spawn);
     }
 
+    public OGSpawn removePrivateSpawnBySpawnName(Player p, String spawnName){
+        for(OGSpawn spawn : this.privateSpawns){
+            if(spawn.getSpawnName().equals(spawnName) && spawn.getSpawnOwner().equals(p)){
+                this.privateSpawns.remove(spawn);
+                return spawn;
+            }
+        }
+        return null;
+    }
+
     /**
      * Function is used to retrieve all private spawns of a single player
      *
@@ -126,5 +139,21 @@ public class OGSpawnUtils {
 
     public List<OGSpawn> getAllPrivateSpawns(){
         return privateSpawns;
+    }
+
+    public void addPlayerToConfigProcess(Player p, int index){
+        this.currentConfigPage.put(p, index);
+    }
+
+    public void removePlayerFromConfigProcess(Player p){
+        this.currentConfigPage.remove(p);
+    }
+
+    public Integer getCurrentConfigPage(Player p){
+        return this.currentConfigPage.get(p);
+    }
+
+    public boolean isPlayerInConfigMode(Player p){
+        return this.currentConfigPage.containsKey(p);
     }
 }

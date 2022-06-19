@@ -15,3 +15,6 @@ commands:
   ogremovespawn:
     usage: /ogremovespawn <Name>
     description: Used to remove an existing spawn point
+  ogconfigurespawn:
+    usage: /ogconfigurespawn
+    description: Opens a custom inventory where you can edit your private spawns
