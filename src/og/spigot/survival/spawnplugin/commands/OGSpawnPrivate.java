@@ -1,6 +1,7 @@
 package og.spigot.survival.spawnplugin.commands;
 
 import og.spigot.survival.spawnplugin.main.OGSpawnPluginMain;
+import og.spigot.survival.spawnplugin.utils.OGSpawn;
 import og.spigot.survival.spawnplugin.utils.OGSpawnUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,6 +14,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -31,16 +33,18 @@ public class OGSpawnPrivate implements CommandExecutor {
         if(commandSender instanceof Player){
             if(command.getName().equals("ogspawn")){
                 Player p = (Player) commandSender;
-                Map<String, Location> playerSpawn = OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p);
+                List<OGSpawn> playerSpawn = OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(p);
 
                 if(!playerSpawn.isEmpty() || OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn() != null){
                     if (strings.length > 0){
-                        if(playerSpawn.containsKey(strings[0])){
-                            commandSender.sendMessage("§7[§3OGWarpEssentials§7] >> §2Teleportiere...");
-                            p.teleport(playerSpawn.get(strings[0]));
-                        }else{
-                            commandSender.sendMessage("§7[§3OGWarpEssentials§7] >> Es konnte kein Spawn mit dem Namen §c" + strings[0] + " §7gefunden werden");
+                        for(OGSpawn spawn : playerSpawn){
+                            if(spawn.getSpawnName().equals(strings[0])){
+                                commandSender.sendMessage("§7[§3OGWarpEssentials§7] >> §2Teleportiere...");
+                                p.teleport(spawn.getSpawnLocation());
+                                return true;
+                            }
                         }
+                        commandSender.sendMessage("§7[§3OGWarpEssentials§7] >> Es konnte kein Spawn mit dem Namen §c" + strings[0] + " §7gefunden werden");
                     }else{
                         inventoryBuilder(p);
                     }
@@ -74,15 +78,21 @@ public class OGSpawnPrivate implements CommandExecutor {
         int index = 10;
         ItemMeta privateSpawnMeta;
 
-        for(Map.Entry<String, Location> playerSpawns : OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(player).entrySet()){
-            inv.setItem(index, new ItemStack(Material.ENDER_PEARL));
-            privateSpawnMeta = inv.getItem(index).getItemMeta();
-            privateSpawnMeta.setDisplayName(playerSpawns.getKey());
-            inv.getItem(index).setItemMeta(privateSpawnMeta);
-            index++;
+        for(OGSpawn spawn : OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(player)){
+            if(spawn.getSpawnOwner().getUniqueId().equals(player.getUniqueId())){
+                if(spawn.getSpawnIcon() == Material.AIR || spawn.getSpawnIcon() == null){
+                    inv.setItem(index, new ItemStack(Material.ENDER_PEARL));
+                }else{
+                    inv.setItem(index, new ItemStack(spawn.getSpawnIcon()));
+                }
+                privateSpawnMeta = inv.getItem(index).getItemMeta();
+                privateSpawnMeta.setDisplayName(spawn.getSpawnName());
+                inv.getItem(index).setItemMeta(privateSpawnMeta);
+                index++;
 
-            if(index % 8 == 0){
-                index+=2;
+                if(index % 8 == 0){
+                    index+=2;
+                }
             }
         }
 

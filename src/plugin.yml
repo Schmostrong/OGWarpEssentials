@@ -12,3 +12,6 @@ commands:
   ogspawn:
     usage: /ogspawn <Name>
     description: Used to teleport to a designated spawn position
+  ogremovespawn:
+    usage: /ogremovespawn <Name>
+    description: Used to remove an existing spawn point

@@ -1,5 +1,6 @@
 package og.spigot.survival.spawnplugin.main;
 
+import og.spigot.survival.spawnplugin.commands.OGRemoveSpawn;
 import og.spigot.survival.spawnplugin.commands.OGSetSpawn;
 import og.spigot.survival.spawnplugin.commands.OGSpawnPrivate;
 import og.spigot.survival.spawnplugin.commands.Spawn;
@@ -9,16 +10,9 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class OGSpawnPluginMain extends JavaPlugin {
-    private static FileConfiguration mainConfiguration;
 
     @Override
     public void onEnable() {
-        mainConfiguration = this.getConfig();
-
-        getCommand("ogsetspawn").setExecutor(new OGSetSpawn());
-        getCommand("ogspawn").setExecutor(new OGSpawnPrivate());
-        getCommand("spawn").setExecutor(new Spawn());
-        getServer().getPluginManager().registerEvents(new OGSpawnPluginListener(), this);
 
         this.getConfig().options().copyDefaults(true);
         saveDefaultConfig();
@@ -33,6 +27,12 @@ public class OGSpawnPluginMain extends JavaPlugin {
                                                         this.getConfig().getString("password"),
                                                         this.getConfig().getInt("mysql_port"));
         DAO.getDataAccessObject().prepareTables();
+
+        getCommand("ogsetspawn").setExecutor(new OGSetSpawn());
+        getCommand("ogremovespawn").setExecutor(new OGRemoveSpawn());
+        getCommand("ogspawn").setExecutor(new OGSpawnPrivate());
+        getCommand("spawn").setExecutor(new Spawn());
+        getServer().getPluginManager().registerEvents(new OGSpawnPluginListener(), this);
         super.onEnable();
     }
 
@@ -40,9 +40,5 @@ public class OGSpawnPluginMain extends JavaPlugin {
     public void onDisable() {
         DAO.getDataAccessObject().saveAllPrivateSpawns();
         DAO.getDataAccessObject().saveGlobalSpawn();
-    }
-
-    public static FileConfiguration getMainConfig(){
-        return mainConfiguration;
     }
 }

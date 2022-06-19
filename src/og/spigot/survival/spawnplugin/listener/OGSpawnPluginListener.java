@@ -2,6 +2,7 @@ package og.spigot.survival.spawnplugin.listener;
 
 import og.spigot.survival.spawnplugin.database.DAO;
 import og.spigot.survival.spawnplugin.main.OGSpawnPluginMain;
+import og.spigot.survival.spawnplugin.utils.OGSpawn;
 import og.spigot.survival.spawnplugin.utils.OGSpawnUtils;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -26,10 +27,8 @@ public class OGSpawnPluginListener implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent playerJoinEvent){
-        World w = playerJoinEvent.getPlayer().getWorld();
-
-        DAO.getDataAccessObject().retrieveGlobalSpawn(w);
-        DAO.getDataAccessObject().retrievePlayerSpawns(playerJoinEvent.getPlayer(), w);
+        DAO.getDataAccessObject().retrieveGlobalSpawn();
+        DAO.getDataAccessObject().retrievePlayerSpawns(playerJoinEvent.getPlayer());
     }
 
     /**
@@ -61,10 +60,13 @@ public class OGSpawnPluginListener implements Listener {
 
         try{
             if(inventoryClickEvent.getCurrentItem().getItemMeta() != null){
-                if(OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p).containsKey(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName())){
-                    inventoryClickEvent.setCancelled(true);
-                    p.teleport(OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(p).get(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName()));
-                }else if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Public Spawn")){
+                for(OGSpawn spawn : OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(p)){
+                    if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals(spawn.getSpawnName())){
+                        inventoryClickEvent.setCancelled(true);
+                        p.teleport(spawn.getSpawnLocation());
+                    }
+                }
+                if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Public Spawn")){
                     inventoryClickEvent.setCancelled(true);
                     p.teleport(OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn());
                 }
@@ -72,6 +74,5 @@ public class OGSpawnPluginListener implements Listener {
         }catch (Exception ex){
             ex.getLocalizedMessage();
         }
-
     }
 }

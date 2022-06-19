@@ -2,7 +2,7 @@
 #               Database connection settings                      #
 ###################################################################
 mysql_host: "localhost"
-mysql_port: 3303
+mysql_port: 3306
 database: "OGWarpEssentials"
 username : "og_plugin_user"
 password: "1234567"

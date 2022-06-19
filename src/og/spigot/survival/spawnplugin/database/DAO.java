@@ -1,7 +1,10 @@
 package og.spigot.survival.spawnplugin.database;
 
+import og.spigot.survival.spawnplugin.utils.OGSpawn;
 import og.spigot.survival.spawnplugin.utils.OGSpawnUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -33,7 +36,7 @@ public class DAO {
     public void saveGlobalSpawn(){
         try{
             this.connection.openConnection();
-            PreparedStatement ps = this.connection.getConnection().prepareStatement("INSERT INTO OGSpawnPoints VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            PreparedStatement ps = this.connection.getConnection().prepareStatement("INSERT INTO OGSpawnPoints VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             ps.setString(1, "global");
             ps.setString(2, "-");
             ps.setString(3, "Global Spawn");
@@ -41,7 +44,8 @@ public class DAO {
             ps.setInt(5, OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn().getBlockX());
             ps.setInt(6, OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn().getBlockY());
             ps.setInt(7, OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn().getBlockZ());
-            ps.setTimestamp(8, new java.sql.Timestamp (System.currentTimeMillis ()));
+            ps.setString(8, "");
+            ps.setTimestamp(9, new java.sql.Timestamp (System.currentTimeMillis ()));
 
             ps.executeUpdate();
         }catch (Exception ex){
@@ -56,45 +60,19 @@ public class DAO {
     public void savePrivateSpawn(Player player){
         try{
             this.connection.openConnection();
-            PreparedStatement ps = this.connection.getConnection().prepareStatement("INSERT INTO OGSpawnPoints VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            PreparedStatement ps = this.connection.getConnection().prepareStatement("INSERT INTO OGSpawnPoints VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-            for(Map.Entry<String, Location> playerSpawns : OGSpawnUtils.getOGSpawnUtils().getPlayerSpawns(player).entrySet()){
-                ps.setString(1, "private");
-                ps.setString(2, player.getDisplayName());
-                ps.setString(3, playerSpawns.getKey());
-                ps.setString(4, playerSpawns.getValue().getWorld().getName());
-                ps.setInt(5, playerSpawns.getValue().getBlockX());
-                ps.setInt(6, playerSpawns.getValue().getBlockY());
-                ps.setInt(7, playerSpawns.getValue().getBlockZ());
-                ps.setTimestamp(8, new java.sql.Timestamp (System.currentTimeMillis ()));
-
-                ps.executeUpdate();
-            }
-        }catch (Exception ex){
-            System.out.println(ex.getLocalizedMessage());
-        }finally {
-            if(connection.getConnection() != null){
-                connection.closeConnection();
-            }
-        }
-    }
-
-    public void saveAllPrivateSpawns(){
-        try{
-            this.connection.openConnection();
-            PreparedStatement ps = this.connection.getConnection().prepareStatement("INSERT INTO OGSpawnPoints VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-
-            for(Map.Entry<Player, Map<String, Location>> playerSpawns : OGSpawnUtils.getOGSpawnUtils().getAllPlayerSpawns().entrySet()){
-                ps.setString(1, "private");
-                ps.setString(2, playerSpawns.getKey().getDisplayName());
-
-                for(Map.Entry<String, Location> specificPlayerSpawns : playerSpawns.getValue().entrySet()){
-                    ps.setString(3, specificPlayerSpawns.getKey());
-                    ps.setString(4, specificPlayerSpawns.getValue().getWorld().getName());
-                    ps.setInt(5, specificPlayerSpawns.getValue().getBlockX());
-                    ps.setInt(6, specificPlayerSpawns.getValue().getBlockY());
-                    ps.setInt(7, specificPlayerSpawns.getValue().getBlockZ());
-                    ps.setTimestamp(8, new java.sql.Timestamp (System.currentTimeMillis ()));
+            for(OGSpawn spawn : OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(player)){
+                if(spawn.getSpawnOwner().getUniqueId().equals(player.getUniqueId())){
+                    ps.setString(1, "private");
+                    ps.setString(2, "" + player.getUniqueId());
+                    ps.setString(3, spawn.getSpawnName());
+                    ps.setString(4, spawn.getSpawnLocation().getWorld().getName());
+                    ps.setInt(5, spawn.getSpawnLocation().getBlockX());
+                    ps.setInt(6, spawn.getSpawnLocation().getBlockY());
+                    ps.setInt(7, spawn.getSpawnLocation().getBlockZ());
+                    ps.setString(8, "" + spawn.getSpawnIcon());
+                    ps.setTimestamp(9, new java.sql.Timestamp (System.currentTimeMillis ()));
 
                     ps.executeUpdate();
                 }
@@ -108,15 +86,60 @@ public class DAO {
         }
     }
 
-    public void retrieveGlobalSpawn(World world){
+    public void saveAllPrivateSpawns(){
+        try{
+            this.connection.openConnection();
+            PreparedStatement ps = this.connection.getConnection().prepareStatement("INSERT INTO OGSpawnPoints VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+            for(OGSpawn spawn : OGSpawnUtils.getOGSpawnUtils().getAllPrivateSpawns()){
+                ps.setString(1, "private");
+                ps.setString(2, "" + spawn.getSpawnOwner().getUniqueId());
+                ps.setString(3, spawn.getSpawnName());
+                ps.setString(4, spawn.getSpawnLocation().getWorld().getName());
+                ps.setInt(5, spawn.getSpawnLocation().getBlockX());
+                ps.setInt(6, spawn.getSpawnLocation().getBlockY());
+                ps.setInt(7, spawn.getSpawnLocation().getBlockZ());
+                ps.setString(8, "" + spawn.getSpawnIcon());
+                ps.setTimestamp(9, new java.sql.Timestamp (System.currentTimeMillis ()));
+
+                ps.executeUpdate();
+            }
+        }catch (Exception ex){
+            System.out.println(ex.getLocalizedMessage());
+        }finally {
+            if(connection.getConnection() != null){
+                connection.closeConnection();
+            }
+        }
+    }
+
+    public void removePrivateSpawn(OGSpawn spawn){
+        try{
+            this.connection.openConnection();
+            PreparedStatement ps = this.connection.getConnection().prepareStatement("DELETE FROM OGSpawnPoints WHERE OwnerUUID = ? AND SpawnName = ?");
+
+            ps.setString(1, "" + spawn.getSpawnOwner().getUniqueId());
+            ps.setString(2, spawn.getSpawnName());
+
+            ps.executeUpdate();
+        }catch (Exception ex){
+            System.out.println(ex.getLocalizedMessage());
+        }finally {
+            if(connection.getConnection() != null){
+                connection.closeConnection();
+            }
+        }
+    }
+
+    public void retrieveGlobalSpawn(){
         try{
             connection.openConnection();
-            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT BlockX, BlockY, BlockZ " +
+            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT World, BlockX, BlockY, BlockZ " +
                                                                                     "FROM OGSpawnPoints " +
                                                                                     "WHERE scope = 'global'");
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
-                Location loc = new Location(world, rs.getInt("BlockX"), rs.getInt("BlockY"), rs.getInt("BlockZ"));
+                Location loc = new Location(Bukkit.getWorld(rs.getString("World")), rs.getInt("BlockX"), rs.getInt("BlockY"), rs.getInt("BlockZ"));
                 OGSpawnUtils.getOGSpawnUtils().setGlobalSpawn(loc);
             }
         }catch (Exception ex){
@@ -128,17 +151,17 @@ public class DAO {
         }
     }
 
-    public void retrievePlayerSpawns(Player p, World world){
+    public void retrievePlayerSpawns(Player p){
         try{
             connection.openConnection();
-            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT Spawnname, BlockX, BlockY, BlockZ " +
+            PreparedStatement ps = connection.getConnection().prepareStatement("SELECT Spawnname, World, BlockX, BlockY, BlockZ, Material " +
                                                             "FROM OGSpawnPoints " +
-                                                            "WHERE OwnerName = ?");
-            ps.setString(1, p.getDisplayName());
+                                                            "WHERE OwnerUUID = ?");
+            ps.setString(1, "" + p.getUniqueId());
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
-                Location loc = new Location(world, rs.getInt("BlockX"), rs.getInt("BlockY"), rs.getInt("BlockZ"));
-                OGSpawnUtils.getOGSpawnUtils().addPlayerSpawn(p, rs.getString(1), loc);
+                Location loc = new Location(Bukkit.getWorld(rs.getString("World")), rs.getInt("BlockX"), rs.getInt("BlockY"), rs.getInt("BlockZ"));
+                OGSpawnUtils.getOGSpawnUtils().addPrivateSpawn(p, rs.getString(1), loc, Material.getMaterial(rs.getString("Material")));
             }
         }catch (Exception ex){
             System.out.println(ex.getLocalizedMessage());
@@ -153,16 +176,17 @@ public class DAO {
     public void prepareTables(){
         try{
             this.connection.openConnection();
-            PreparedStatement ps = this.connection.getConnection().prepareStatement("CREATE TABLE OGSpawnPoints" +
+            PreparedStatement ps = this.connection.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS OGSpawnPoints" +
                                                                                         "(scope varchar(10)," +
-                                                                                        "OwnerName varchar(30)," +
+                                                                                        "OwnerUUID varchar(100)," +
                                                                                         "SpawnName varchar(50)," +
                                                                                         "World varchar(50)," +
                                                                                         "BlockX int," +
                                                                                         "BlockY int," +
                                                                                         "BlockZ int," +
+                                                                                        "Material varchar(50)," +
                                                                                         "TS_modified timestamp, " +
-                                                                                        "PRIMARY KEY(OwnerName, SpawnName))");
+                                                                                        "PRIMARY KEY(OwnerUUID, SpawnName))");
             ps.executeUpdate();
         }catch (Exception ex){
             System.out.println(ex.getLocalizedMessage());

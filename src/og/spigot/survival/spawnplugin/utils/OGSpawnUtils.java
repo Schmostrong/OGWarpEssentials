@@ -1,12 +1,10 @@
 package og.spigot.survival.spawnplugin.utils;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The class is used to store all data that is used by the plugin during runtime.
@@ -18,10 +16,12 @@ public class OGSpawnUtils {
      * The variable represents the globalSpawn used for every player
      */
     private Location globalSpawn;
+
     /**
      * The variable capsulates all private spawns set by the players
      */
-    private Map<Player, Map<String, Location>> playerSpawns;
+    private List<OGSpawn> privateSpawns;
+
     /**
      * The variable holds the singleton instance of the OGSpawnUtils class
      */
@@ -33,7 +33,7 @@ public class OGSpawnUtils {
      */
     private OGSpawnUtils(){
         globalSpawn = null;
-        playerSpawns = new HashMap();
+        privateSpawns = new LinkedList<>();
     }
 
     /**
@@ -67,6 +67,7 @@ public class OGSpawnUtils {
      * @author Schmostrong
      * @return The location of the global spawn point
      */
+
     public Location getGlobalSpawn(){
         return globalSpawn;
     }
@@ -78,17 +79,19 @@ public class OGSpawnUtils {
      * @param p The player who wants to set a new spawn point
      * @param spawnName The name that is assigned to this spawn location
      * @param spawnLoc The location the spawnPoint shall be set
+     * @param material The material that is shown in the custom inventory
      */
-    public void addPlayerSpawn(Player p, String spawnName, Location spawnLoc){
-        if(playerSpawns.containsKey(p)){
-            Map<String, Location> spawns = playerSpawns.get(p);
-            spawns.put(spawnName, spawnLoc);
-            playerSpawns.replace(p, spawns);
-        }else{
-            Map<String, Location> spawns = new HashMap<>();
-            spawns.put(spawnName, spawnLoc);
-            playerSpawns.put(p, spawns);
-        }
+    public void addPrivateSpawn(Player p, String spawnName, Location spawnLoc, Material material){
+        this.privateSpawns.add(new OGSpawn(p, spawnName, spawnLoc, material));
+    }
+
+    /**
+     * Funtion is used to remove an existing private spawn point
+     *
+     * @param spawn The spawn point that shall be removed
+     */
+    public void removePrivateSpawn(OGSpawn spawn){
+        this.privateSpawns.remove(spawn);
     }
 
     /**
@@ -98,34 +101,30 @@ public class OGSpawnUtils {
      * @param p The player to retrieve the private spawns from
      * @return All private spawns with their assigned names and exact location
      */
-    public Map<String, Location> getPlayerSpawns(Player p){
-        if(playerSpawns.containsKey(p)){
-            return playerSpawns.get(p);
-        }else{
-            Map<String, Location> emptyLocations = new HashMap<>();
-            return emptyLocations;
+    public List<OGSpawn> getPrivateSpawns(Player p){
+        List<OGSpawn> privateSpawnTemp = new LinkedList<>();
+
+        for(OGSpawn spawn : privateSpawns){
+            if(spawn.getSpawnOwner().getUniqueId().equals(p.getUniqueId())){
+                privateSpawnTemp.add(spawn);
+            }
         }
+
+        return privateSpawnTemp;
     }
 
-    /**
-     * Function is used to get all private spawns of all players
-     *
-     * It is used when all spawns are written into the database on server shutdown
-     *
-     * @author Schmostrong
-     * @return All players with all their private spawns
-     */
-    public Map<Player, Map<String, Location>> getAllPlayerSpawns(){
-        return playerSpawns;
-    }
-
-    /**
-     * The function is used to unload the players data after they were stored in the database when quitting the server
-     *
-     * @author Schmostrong
-     * @param p - Represents the player, whose data should be unloaded
-     */
     public void unloadPlayersData(Player p){
-        playerSpawns.remove(p);
+        List<OGSpawn> spawnsToRemove = new LinkedList<>();
+        for(OGSpawn spawn : privateSpawns){
+            if(spawn.getSpawnOwner().getUniqueId().equals(p.getUniqueId())){
+                spawnsToRemove.add(spawn);
+            }
+        }
+
+        this.privateSpawns.removeAll(spawnsToRemove);
+    }
+
+    public List<OGSpawn> getAllPrivateSpawns(){
+        return privateSpawns;
     }
 }

@@ -49,4 +49,14 @@ public class OGSpawn {
     public void setSpawnIcon(Material spawnIcon) {
         this.spawnIcon = spawnIcon;
     }
+
+    @Override
+    public String toString() {
+        return "OGSpawn{" +
+                "spawnOwner=" + spawnOwner +
+                ", spawnName='" + spawnName + '\'' +
+                ", spawnLocation=" + spawnLocation +
+                ", spawnIcon=" + spawnIcon +
+                '}';
+    }
 }
