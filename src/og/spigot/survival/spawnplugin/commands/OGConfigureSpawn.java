@@ -51,6 +51,6 @@ public class OGConfigureSpawn implements CommandExecutor {
         inv.setItem(indexPageSwap, new ItemStack(Material.ARROW));
 
         p.openInventory(inv);
-        OGSpawnUtils.getOGSpawnUtils().addPlayerToConfigProcess(p, previousPage);
+        OGSpawnUtils.getOGSpawnUtils().addPlayerToConfigProcess(p, ++previousPage);
     }
 }

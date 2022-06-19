@@ -4,6 +4,7 @@ import og.spigot.survival.spawnplugin.database.DAO;
 import og.spigot.survival.spawnplugin.main.OGSpawnPluginMain;
 import og.spigot.survival.spawnplugin.utils.OGSpawn;
 import og.spigot.survival.spawnplugin.utils.OGSpawnUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -17,7 +18,9 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -85,6 +88,8 @@ public class OGSpawnPluginListener implements Listener {
                     }else if(inventoryClickEvent.getCurrentItem().getType() == Material.OAK_SIGN){
                         p.closeInventory();
                         p.sendMessage("§7[§3OGWarpEssentials§7] >> Bitte gib den neuen Namen für deinen Spawnpunkt ein");
+                    }else if(inventoryClickEvent.getCurrentItem().getType() == Material.ARROW){
+                        buildCustomConfigInventory(p, OGSpawnUtils.getOGSpawnUtils().getCurrentConfigPage(p));
                     }
                 }
             }
@@ -103,5 +108,31 @@ public class OGSpawnPluginListener implements Listener {
             spawn.setSpawnName(asyncPlayerChatEvent.getMessage());
             OGSpawnUtils.getOGSpawnUtils().removePlayerFromConfigProcess(asyncPlayerChatEvent.getPlayer());
         }
+    }
+
+    public void buildCustomConfigInventory(Player p, int index){
+        Inventory inv = Bukkit.createInventory(p, 45, "Private Warps Configuration");
+
+        int indexSpawnItems = 13;
+        int indexChoices = 28;
+        int indexPageSwap = 36;
+
+        List<OGSpawn> playerSpawns = OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(p);
+
+        inv.setItem(indexSpawnItems, new ItemStack(playerSpawns.get(index).getSpawnIcon()));
+        inv.setItem(indexChoices, new ItemStack(Material.OAK_SIGN));
+        indexChoices += 6;
+        inv.setItem(indexChoices, new ItemStack(Material.RED_STAINED_GLASS_PANE));
+
+        if(index != 0){
+            inv.setItem(indexPageSwap, new ItemStack(Material.ARROW));
+        }
+        if(playerSpawns.size() != --index){
+            indexPageSwap+=8;
+            inv.setItem(indexPageSwap, new ItemStack(Material.ARROW));
+        }
+
+        p.openInventory(inv);
+        OGSpawnUtils.getOGSpawnUtils().addPlayerToConfigProcess(p, ++index);
     }
 }
