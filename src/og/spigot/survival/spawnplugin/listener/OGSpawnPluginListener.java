@@ -19,6 +19,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,9 @@ public class OGSpawnPluginListener implements Listener {
      */
     @EventHandler
     public void onWarpInventoryDrag(InventoryDragEvent inventoryDragEvent){
-        inventoryDragEvent.setCancelled(true);
+        if(inventoryDragEvent.getView().getTitle().equals("Private Warps") || inventoryDragEvent.getView().getTitle().equals("Private Warps Configuration")){
+            inventoryDragEvent.setCancelled(true);
+        }
     }
 
     /**
@@ -66,7 +69,7 @@ public class OGSpawnPluginListener implements Listener {
 
         try{
             if(inventoryClickEvent.getCurrentItem().getItemMeta() != null){
-                if(inventoryClickEvent.getView().getTitle().equals("Private Spawns")){
+                if(inventoryClickEvent.getView().getTitle().equals("Private Warps")){
                     for(OGSpawn spawn : OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(p)){
                         if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals(spawn.getSpawnName())){
                             inventoryClickEvent.setCancelled(true);
@@ -77,19 +80,25 @@ public class OGSpawnPluginListener implements Listener {
                         inventoryClickEvent.setCancelled(true);
                         p.teleport(OGSpawnUtils.getOGSpawnUtils().getGlobalSpawn());
                     }
-                }else if(inventoryClickEvent.getView().getTitle().equals("Private Spawns Configuration")){
+                }else if(inventoryClickEvent.getView().getTitle().equals("Private Warps Configuration")){
                     inventoryClickEvent.setCancelled(true);
-                    if(inventoryClickEvent.getCurrentItem().getType() == Material.RED_STAINED_GLASS_PANE){
+                    if(inventoryClickEvent.getCurrentItem().getType() == Material.TNT){
                         p.closeInventory();
                         OGSpawn deleted = OGSpawnUtils.getOGSpawnUtils().removePrivateSpawnBySpawnName(p, inventoryClickEvent.getInventory().getItem(13).getItemMeta().getDisplayName());
                         DAO.getDataAccessObject().removePrivateSpawn(deleted);
                         p.sendMessage("§7[§3OGWarpEssentials§7] >> Der Spawnpunkt mit dem Namen §e" + inventoryClickEvent.getInventory().getItem(13).getItemMeta().getDisplayName() + " §7wurde erfolgreich entfernt");
                         OGSpawnUtils.getOGSpawnUtils().removePlayerFromConfigProcess(p);
-                    }else if(inventoryClickEvent.getCurrentItem().getType() == Material.OAK_SIGN){
+                    }else if(inventoryClickEvent.getCurrentItem().getType() == Material.ANVIL){
                         p.closeInventory();
                         p.sendMessage("§7[§3OGWarpEssentials§7] >> Bitte gib den neuen Namen für deinen Spawnpunkt ein");
                     }else if(inventoryClickEvent.getCurrentItem().getType() == Material.ARROW){
-                        buildCustomConfigInventory(p, OGSpawnUtils.getOGSpawnUtils().getCurrentConfigPage(p));
+                        if (inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Next Private Spawn")){
+                            OGSpawnUtils.getOGSpawnUtils().setPlayerConfigPagePlus(p);
+                            buildCustomConfigInventory(p, OGSpawnUtils.getOGSpawnUtils().getCurrentConfigPage(p));
+                        }else if(inventoryClickEvent.getCurrentItem().getItemMeta().getDisplayName().equals("Previous Private Spawn")){
+                            OGSpawnUtils.getOGSpawnUtils().setPlayerConfigPageMinus(p);
+                            buildCustomConfigInventory(p, OGSpawnUtils.getOGSpawnUtils().getCurrentConfigPage(p));
+                        }
                     }
                 }
             }
@@ -119,20 +128,44 @@ public class OGSpawnPluginListener implements Listener {
 
         List<OGSpawn> playerSpawns = OGSpawnUtils.getOGSpawnUtils().getPrivateSpawns(p);
 
-        inv.setItem(indexSpawnItems, new ItemStack(playerSpawns.get(index).getSpawnIcon()));
-        inv.setItem(indexChoices, new ItemStack(Material.OAK_SIGN));
-        indexChoices += 6;
-        inv.setItem(indexChoices, new ItemStack(Material.RED_STAINED_GLASS_PANE));
-
-        if(index != 0){
-            inv.setItem(indexPageSwap, new ItemStack(Material.ARROW));
+        if(playerSpawns.get(index).getSpawnIcon() == Material.AIR || playerSpawns.get(index).getSpawnIcon() == Material.LEGACY_AIR || playerSpawns.get(index).getSpawnIcon() == null){
+            inv.setItem(indexSpawnItems, new ItemStack(Material.ENDER_PEARL));
+            ItemMeta itemMetaBeta = inv.getItem(indexSpawnItems).getItemMeta();
+            itemMetaBeta.setDisplayName(playerSpawns.get(index).getSpawnName());
+            inv.getItem(indexSpawnItems).setItemMeta(itemMetaBeta);
+        }else{
+            inv.setItem(indexSpawnItems, new ItemStack(playerSpawns.get(index).getSpawnIcon()));
+            ItemMeta itemMetaBeta = inv.getItem(indexSpawnItems).getItemMeta();
+            itemMetaBeta.setDisplayName(playerSpawns.get(index).getSpawnName());
+            inv.getItem(indexSpawnItems).setItemMeta(itemMetaBeta);
         }
-        if(playerSpawns.size() != --index){
-            indexPageSwap+=8;
+        inv.setItem(indexChoices, new ItemStack(Material.ANVIL));
+        ItemMeta itemMeta = inv.getItem(indexChoices).getItemMeta();
+        itemMeta.setDisplayName("Rename Private Spawn");
+        inv.getItem(indexChoices).setItemMeta(itemMeta);
+        indexChoices += 6;
+        inv.setItem(indexChoices, new ItemStack(Material.TNT));
+        itemMeta = inv.getItem(indexChoices).getItemMeta();
+        itemMeta.setDisplayName("Delete Private Spawn");
+        inv.getItem(indexChoices).setItemMeta(itemMeta);
+
+        if(index!= 0){
             inv.setItem(indexPageSwap, new ItemStack(Material.ARROW));
+            itemMeta = inv.getItem(indexPageSwap).getItemMeta();
+            itemMeta.setDisplayName("Previous Private Spawn");
+            inv.getItem(indexPageSwap).setItemMeta(itemMeta);
+        }
+
+        indexPageSwap+=8;
+
+        if(playerSpawns.size() > index+1){
+            inv.setItem(indexPageSwap, new ItemStack(Material.ARROW));
+            itemMeta = inv.getItem(indexPageSwap).getItemMeta();
+            itemMeta.setDisplayName("Next Private Spawn");
+            inv.getItem(indexPageSwap).setItemMeta(itemMeta);
         }
 
         p.openInventory(inv);
-        OGSpawnUtils.getOGSpawnUtils().addPlayerToConfigProcess(p, ++index);
+        OGSpawnUtils.getOGSpawnUtils().addPlayerToConfigProcess(p, index);
     }
 }

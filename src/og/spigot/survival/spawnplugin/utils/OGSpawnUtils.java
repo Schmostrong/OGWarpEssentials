@@ -156,4 +156,14 @@ public class OGSpawnUtils {
     public boolean isPlayerInConfigMode(Player p){
         return this.currentConfigPage.containsKey(p);
     }
+
+    public void setPlayerConfigPagePlus(Player p){
+        Integer currentConfigPage = this.currentConfigPage.get(p);
+        this.currentConfigPage.replace(p, ++currentConfigPage);
+    }
+
+    public void setPlayerConfigPageMinus(Player p){
+        Integer currentConfigPage = this.currentConfigPage.get(p);
+        this.currentConfigPage.replace(p, --currentConfigPage);
+    }
 }
